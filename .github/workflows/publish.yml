@@ -1,0 +1,28 @@
+name: Publish Windows update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+      - "Knightys-Bricks-Analytics-Windows.zip"
+      - ".github/workflows/publish.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read release version
+        id: version
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      - name: Publish public update
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Knighty's Bricks Analytics v${{ steps.version.outputs.version }}
+          files: Knightys-Bricks-Analytics-Windows.zip
+          generate_release_notes: true
