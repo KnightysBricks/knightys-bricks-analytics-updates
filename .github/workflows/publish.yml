@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/publish.yml"
-      - ".release-source-url"
+      - ".publish-disabled-trigger"
 
 permissions:
   contents: write
@@ -14,30 +13,4 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Download and verify Windows package
-        run: |
-          test -f .release-source-url
-          SOURCE_URL="$(cat .release-source-url)"
-          case "$SOURCE_URL" in https://*) ;; *) echo "Invalid staged download URL"; exit 1;; esac
-          curl --fail --location --retry 2 "$SOURCE_URL" --output artifact.zip
-          unzip -p artifact.zip Knightys-Bricks-Analytics-Windows.zip > Knightys-Bricks-Analytics-Windows.zip
-          test "$(stat -c%s Knightys-Bricks-Analytics-Windows.zip)" -gt 1000000
-          unzip -l Knightys-Bricks-Analytics-Windows.zip
-          unzip -t Knightys-Bricks-Analytics-Windows.zip
-          unzip -Z1 Knightys-Bricks-Analytics-Windows.zip | grep -Fx "Knightys Bricks Analytics.exe"
-      - name: Publish v0.2.2
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.2.2
-          name: Knighty's Bricks Analytics v0.2.2
-          body: "Updater-enabled Windows release. Fixes inventory rows when thumbnails have not loaded. The package contains the application and installer only; inventory databases and credentials are not included. The package contains the application and installer only; inventory databases and credentials are not included."
-          files: Knightys-Bricks-Analytics-Windows.zip
-          overwrite_files: true
-      - name: Remove temporary staging URL
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .release-source-url
-          git commit -m "Remove temporary release staging URL"
-          git push
+      - run: echo "No release trigger configured."
