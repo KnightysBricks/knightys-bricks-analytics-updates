@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   release:
+    if: ${{ hashFiles('Knightys-Bricks-Analytics-Windows.zip') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
