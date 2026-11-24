@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - "VERSION"
-      - "Knightys-Bricks-Analytics-Windows.zip"
-      - ".release-source-url"
       - ".github/workflows/publish.yml"
 
 permissions:
@@ -17,26 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download staged first release package
-        if: hashFiles('.release-source-url') != ''
+      - name: Download and unwrap Windows package
         run: |
-          curl --fail --location --retry 2 "$(cat .release-source-url)" --output Knightys-Bricks-Analytics-Windows.zip
+          curl --fail --location --retry 2 "https://github.com/KnightysBricks/knightys-bricks-analytics-updates/releases/download/v0.2.0/Knightys-Bricks-Analytics-Windows.zip" --output artifact.zip
+          unzip -p artifact.zip Knightys-Bricks-Analytics-Windows.zip > Knightys-Bricks-Analytics-Windows.zip
           test "$(stat -c%s Knightys-Bricks-Analytics-Windows.zip)" -gt 1000000
+          unzip -l Knightys-Bricks-Analytics-Windows.zip
           unzip -t Knightys-Bricks-Analytics-Windows.zip
-      - name: Publish public update release
+      - name: Replace public update asset with installer ZIP
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.2.0
           name: Knighty's Bricks Analytics v0.2.0
           body: "First updater-enabled Windows release. This package contains the application only; inventory databases and credentials are not included."
           files: Knightys-Bricks-Analytics-Windows.zip
-      - name: Remove temporary package URL
-        if: hashFiles('.release-source-url') != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .release-source-url
-          git commit -m "Remove temporary release package URL"
-          git push
+          overwrite_files: true
