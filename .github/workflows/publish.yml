@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/publish.yml"
       - ".release-source-url"
+      - "VERSION"
 
 permissions:
   contents: write
@@ -15,23 +16,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Read application version
+        id: app_version
+        run: echo "version=$(tr -d '\r\n' < VERSION)" >> "$GITHUB_OUTPUT"
       - name: Download and verify Windows package
         run: |
           test -f .release-source-url
           SOURCE_URL="$(cat .release-source-url)"
           case "$SOURCE_URL" in https://*) ;; *) echo "Invalid staged download URL"; exit 1;; esac
-          curl --fail --location --retry 2 "$SOURCE_URL" --output artifact.zip
-          unzip -p artifact.zip Knightys-Bricks-Analytics-Windows.zip > Knightys-Bricks-Analytics-Windows.zip
+          curl --fail --location --retry 2 "$SOURCE_URL" --output source.zip
+          if unzip -Z1 source.zip | grep -Fxq "Knightys-Bricks-Analytics-Windows.zip"; then
+            unzip -p source.zip Knightys-Bricks-Analytics-Windows.zip > Knightys-Bricks-Analytics-Windows.zip
+          else
+            cp source.zip Knightys-Bricks-Analytics-Windows.zip
+          fi
           test "$(stat -c%s Knightys-Bricks-Analytics-Windows.zip)" -gt 1000000
-          unzip -l Knightys-Bricks-Analytics-Windows.zip
           unzip -t Knightys-Bricks-Analytics-Windows.zip
           unzip -Z1 Knightys-Bricks-Analytics-Windows.zip | grep -Fx "Knightys Bricks Analytics.exe"
-      - name: Publish v0.2.3
+      - name: Publish Windows release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.2.3
-          name: Knighty's Bricks Analytics v0.2.3
-          body: "Improves inventory responsiveness with 50-row pages, Previous/Next navigation, and a maximum of three thumbnail workers. The package contains the application and installer only; inventory databases and credentials are not included."
+          tag_name: v${{ steps.app_version.outputs.version }}
+          name: Knighty's Bricks Analytics v${{ steps.app_version.outputs.version }}
+          body: "Windows release v${{ steps.app_version.outputs.version }}. The package contains the application and installer only; inventory databases and credentials are not included."
           files: Knightys-Bricks-Analytics-Windows.zip
           overwrite_files: true
       - name: Remove temporary staging URL
