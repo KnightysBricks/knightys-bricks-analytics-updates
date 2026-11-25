@@ -22,7 +22,7 @@ jobs:
           test -f .release-source-url
           SOURCE_URL="$(cat .release-source-url)"
           case "$SOURCE_URL" in https://*) ;; *) echo "Invalid staged download URL"; exit 1;; esac
-          curl --fail --location --retry 2 "$SOURCE_URL" --output source.zip
+          curl --fail --location --retry 2 -H "Accept: application/octet-stream" -H "X-GitHub-Api-Version: 2022-11-28" "$SOURCE_URL" --output source.zip
           if unzip -Z1 source.zip | grep -Fxq "Knightys-Bricks-Analytics-Windows.zip"; then
             unzip -p source.zip Knightys-Bricks-Analytics-Windows.zip > Knightys-Bricks-Analytics-Windows.zip
           else
